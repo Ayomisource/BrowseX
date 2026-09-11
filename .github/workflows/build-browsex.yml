@@ -1,0 +1,138 @@
+name: Build BrowseX Android APK
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Create Flutter project
+        run: flutter create --platforms=android .
+
+      - name: Add BrowseX dependencies
+        run: |
+          flutter pub add webview_flutter
+          flutter pub add shared_preferences
+
+      - name: Replace BrowseX app code
+        run: |
+          cat > lib/main.dart <<'EOF'
+          import 'package:flutter/material.dart';
+          import 'package:webview_flutter/webview_flutter.dart';
+
+          void main() {
+            runApp(const BrowseXApp());
+          }
+
+          class BrowseXApp extends StatelessWidget {
+            const BrowseXApp({super.key});
+
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'BrowseX',
+                theme: ThemeData(
+                  colorScheme: ColorScheme.fromSeed(
+                    seedColor: Colors.indigo,
+                  ),
+                  useMaterial3: true,
+                ),
+                home: const BrowserHome(),
+              );
+            }
+          }
+
+          class BrowserHome extends StatefulWidget {
+            const BrowserHome({super.key});
+
+            @override
+            State<BrowserHome> createState() => _BrowserHomeState();
+          }
+
+          class _BrowserHomeState extends State<BrowserHome> {
+            late final WebViewController controller;
+            final address = TextEditingController();
+            bool loading = false;
+
+            @override
+            void initState() {
+              super.initState();
+
+              controller = WebViewController()
+                ..setJavaScriptMode(
+                  JavaScriptMode.unrestricted,
+                )
+                ..setNavigationDelegate(
+                  NavigationDelegate(
+                    onPageStarted: (_) {
+                      setState(() => loading = true);
+                    },
+                    onPageFinished: (url) {
+                      address.text = url;
+                      setState(() => loading = false);
+                    },
+                  ),
+                )
+                ..loadRequest(
+                  Uri.parse('https://www.google.com'),
+                );
+            }
+
+            void search() {
+              final text = address.text.trim();
+
+              if (text.isEmpty) return;
+
+              final url = text.startsWith('http://') ||
+                      text.startsWith('https://')
+                  ? text
+                  : text.contains('.') && !text.contains(' ')
+                      ? 'https://$text'
+                      : 'https://www.google.com/search?q=${Uri.encodeComponent(text)}';
+
+              controller.loadRequest(Uri.parse(url));
+            }
+
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                appBar: AppBar(
+                  title: const Text(
+                    'BrowseX',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                body: Column(
+                  children: [
+                    if (loading)
+                      const LinearProgressIndicator(),
+
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            onPressed: () => controller.goBack(),
+                            icon: const Icon(Icons.arrow_back),
+                          ),
+
+                          IconButton(
+                            onPressed: () => controller.goForward(),
+                            icon: const Icon(Icons.arrow_forward),
+                          ),
+
+                          Expanded(
+                            child: TextField(
+                              controller: address,
+                              onSubmitted: (_) => search(),
+                              decoration: Input

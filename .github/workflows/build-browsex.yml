@@ -136,3 +136,44 @@ jobs:
                               controller: address,
                               onSubmitted: (_) => search(),
                               decoration: Input
+                                hintText: 'Search or enter website',
+                                prefixIcon: const Icon(Icons.search),
+                                suffixIcon: IconButton(
+                                  onPressed: search,
+                                  icon: const Icon(Icons.arrow_circle_right),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(28),
+                                ),
+                              ),
+                            ),
+                          ),
+
+                          IconButton(
+                            onPressed: () => controller.reload(),
+                            icon: const Icon(Icons.refresh),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Expanded(
+                      child: WebViewWidget(
+                        controller: controller,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+          }
+          EOF
+
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: BrowseX-APK
+          path: build/app/outputs/flutter-apk/app-release.apk

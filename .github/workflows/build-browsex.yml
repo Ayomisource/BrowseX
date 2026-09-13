@@ -67,9 +67,7 @@ jobs:
               super.initState();
 
               controller = WebViewController()
-                ..setJavaScriptMode(
-                  JavaScriptMode.unrestricted,
-                )
+                ..setJavaScriptMode(JavaScriptMode.unrestricted)
                 ..setNavigationDelegate(
                   NavigationDelegate(
                     onPageStarted: (_) {
@@ -91,12 +89,13 @@ jobs:
 
               if (text.isEmpty) return;
 
-              final url = text.startsWith('http://') ||
-                      text.startsWith('https://')
-                  ? text
-                  : text.contains('.') && !text.contains(' ')
-                      ? 'https://$text'
-                      : 'https://www.google.com/search?q=${Uri.encodeComponent(text)}';
+              final url =
+                  text.startsWith('http://') ||
+                  text.startsWith('https://')
+                      ? text
+                      : text.contains('.') && !text.contains(' ')
+                          ? 'https://$text'
+                          : 'https://www.google.com/search?q=${Uri.encodeComponent(text)}';
 
               controller.loadRequest(Uri.parse(url));
             }
@@ -125,30 +124,30 @@ jobs:
                             onPressed: () => controller.goBack(),
                             icon: const Icon(Icons.arrow_back),
                           ),
-
                           IconButton(
                             onPressed: () => controller.goForward(),
                             icon: const Icon(Icons.arrow_forward),
                           ),
-
                           Expanded(
                             child: TextField(
                               controller: address,
                               onSubmitted: (_) => search(),
-                              decoration: Input
+                              decoration: InputDecoration(
                                 hintText: 'Search or enter website',
                                 prefixIcon: const Icon(Icons.search),
                                 suffixIcon: IconButton(
                                   onPressed: search,
-                                  icon: const Icon(Icons.arrow_circle_right),
+                                  icon: const Icon(
+                                    Icons.arrow_circle_right,
+                                  ),
                                 ),
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(28),
+                                  borderRadius:
+                                      BorderRadius.circular(28),
                                 ),
                               ),
                             ),
                           ),
-
                           IconButton(
                             onPressed: () => controller.reload(),
                             icon: const Icon(Icons.refresh),
